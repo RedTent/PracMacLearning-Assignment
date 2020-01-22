@@ -1,0 +1,59 @@
+---
+title: "Practical Machine Learning - Prediction Assignment"
+author: "Johan van Tent"
+date: "16-1-2020"
+output: 
+  html_document:
+    code_folding: show
+
+---
+
+
+
+```{r setup}
+library(tidyverse)
+library(caret)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# The goal of your project is to predict the manner in which they did the exercise. 
+# This is the "classe" variable in the training set. You may use any of the other 
+# variables to predict with. 
+# You should create a report describing 
+# how you built your model, 
+# how you used cross validation, 
+# what you think the expected out of sample error is, 
+# and why you made the choices you did. 
+# You will also use your prediction model to predict 20 different test cases.
+```
+
+```{r}
+
+dataset <- read_csv("data/pml-training.csv", na = c("NA", "#DIV/0!")) %>% rename(id = X1)
+test_set <- read_csv("data/pml-testing.csv", na = c("NA", "#DIV/0!")) %>% rename(id = X1)
+
+
+
+# remove columns with missing values
+dataset_sel <- dataset %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id) #%>% 
+  #.[sample(nrow(.), size = 1000),]
+
+# fitControl <- trainControl(## 10-fold CV
+#                            method = "repeatedcv",
+#                            number = 5#,
+#                            ## repeated ten times
+#                            # repeats = 10
+#                            )
+
+set.seed(825)
+# rf_fit <- train(classe ~ ., data = dataset_sel, 
+#                  method = "rf"#, 
+#                  #trControl = fitControl
+#                  )
+# 
+# test_set_sel <- test_set %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)  
+# 
+# predictions <- predict(rf_fit, test_set_sel)
+
+```
+
+TEST
