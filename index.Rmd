@@ -8,8 +8,6 @@ output:
 
 ---
 
-
-
 ```{r setup}
 library(tidyverse)
 library(caret)
@@ -24,33 +22,82 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 # what you think the expected out of sample error is, 
 # and why you made the choices you did. 
 # You will also use your prediction model to predict 20 different test cases.
+
+# https://redtent.github.io/PracMacLearning-Assignment/
 ```
 
-```{r}
+# Summary
 
+# Introduction
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal is to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <http://groupware.les.inf.puc-rio.br/har> (see the section on the Weight Lifting Exercise Dataset)[^note]. 
+
+[^note]: This introduction is a copy from the assignment text.
+
+# Creating a model
+
+The purpose of this exercise is to create a model that can predict the type of activity which is represented by the `classe`-variable which has either the value of `A`, `B`, `C`, `D`, or `E`. Since the goal is to predict multiple classes it makes sense to use a type of model that is able to do a multi-class prediction. A 'random forest'-model is capable of this and also produces often accurate predictions. Therefore I will try to fit a 'random forest'-model and see how well it performs. My goal is to get an prediction accuracy of 80% or better[^1].
+
+[^1]: To pass the quiz that goes with this exercise a minimum of 80% accuarcy is required.
+
+## Preparation
+
+First we'll have to import the data and make some preparations before we can start to build a model. 
+
+A lot of models, including a random forests, cannot handle missing values. For now we'll remove columns with missing values. This leaves 56 variables to predict with, which still seems reasonable. If the model performs poorly we may need to revisit this step and do some imputation. I'll also remove the id-column and the timestamp because these do not have anything to do with the type of activity and are not useful for prediction future activities.
+
+We'll also make a split into train and test data.
+
+```{r prep}
+# import data, set missing values to NA and give the first column a proper name
 dataset <- read_csv("data/pml-training.csv", na = c("NA", "#DIV/0!")) %>% rename(id = X1)
-test_set <- read_csv("data/pml-testing.csv", na = c("NA", "#DIV/0!")) %>% rename(id = X1)
 
+# remove missing values and the id and timestamps
+dataset_sel <- dataset %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)
+ncol(dataset_sel)
+
+set.seed(1020)
+in_train <- caret::createDataPartition(dataset_sel$classe, p = 0.75, list = FALSE)
+train <- dataset_sel[in_train,]
+test <- dataset_sel[-in_train,]
+
+```
+
+## Training and cross-validation
+
+
+
+
+```{r training}
 
 
 # remove columns with missing values
 dataset_sel <- dataset %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id) #%>% 
-  #.[sample(nrow(.), size = 1000),]
+  .[sample(nrow(.), size = 1000),]
 
-# fitControl <- trainControl(## 10-fold CV
-#                            method = "repeatedcv",
-#                            number = 5#,
-#                            ## repeated ten times
-#                            # repeats = 10
-#                            )
+# 10-fold Cross-validation
+fitControl <- trainControl(## 10-fold CV
+                           method = "cv",
+                           number = 10#,
+                           ## repeated ten times
+                           # repeats = 10
+                           )
+
+fitControl <- trainControl(## 10-fold CV
+                           method = "oob",
+                           number = 5#,
+                           ## repeated ten times
+                           # repeats = 10
+                           )
+
 
 set.seed(825)
-# rf_fit <- train(classe ~ ., data = dataset_sel, 
-#                  method = "rf"#, 
-#                  #trControl = fitControl
-#                  )
-# 
-# test_set_sel <- test_set %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)  
+rf_fit <- train(classe ~ ., data = dataset_sel,
+                 method = "rf",
+                 trControl = fitControl
+                 )
+
+test_set_sel <- test_set %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)
 # 
 # predictions <- predict(rf_fit, test_set_sel)
 
