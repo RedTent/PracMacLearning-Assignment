@@ -29,7 +29,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 # Summary
 
-
+In this assignment 5 different categories of activity are predicted using accelerometer data. For the prediction a random forest model is used and cross-validated. The results of the cross-validation and on the test data suggests that a very high prediction accuracy can be achieved using a random forest model.
 
 # Introduction
 
@@ -97,7 +97,7 @@ test_accuracy
 
 ```
 
-The accuracy on the test set is `r round(test_accuracy, digits = 4)`. This is almost equal to the accuracy from the cross-validation.
+The accuracy on the test set is `r round(test_accuracy, digits = 4)`. This is almost equal to the accuracy from the cross-validation. The estimate of the out-of-sample error is `r round(1-test_accuracy, digits = 4)`.
 
 
 # Predicting the quiz dataset
