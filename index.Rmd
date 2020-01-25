@@ -1,5 +1,6 @@
 ---
-title: "Practical Machine Learning - Prediction Assignment"
+title: "Predicting activities with accelerometer data"
+subtitle: "Practical Machine Learning - Prediction Assignment"
 author: "Johan van Tent"
 date: "16-1-2020"
 output: 
@@ -27,6 +28,8 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 ```
 
 # Summary
+
+
 
 # Introduction
 
@@ -65,42 +68,51 @@ test <- dataset_sel[-in_train,]
 
 ## Training and cross-validation
 
+The next step is to train our model and get an estimate of the accuracy of the model. The estimated accuracy is obtained by a 10-fold cross-validation. We'll start with the default settings for a random forest in `caret::train()`. If the result is not acceptable these settings may need to be adapted.
 
 
-
-```{r training}
-
-
-# remove columns with missing values
-dataset_sel <- dataset %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id) #%>% 
-  .[sample(nrow(.), size = 1000),]
+```{r training, cache=TRUE}
 
 # 10-fold Cross-validation
-fitControl <- trainControl(## 10-fold CV
-                           method = "cv",
-                           number = 10#,
-                           ## repeated ten times
-                           # repeats = 10
-                           )
+fit_control <- trainControl(method = "cv", number = 10)
 
-fitControl <- trainControl(## 10-fold CV
-                           method = "oob",
-                           number = 5#,
-                           ## repeated ten times
-                           # repeats = 10
-                           )
+set.seed(2010)
+rf_fit <- train(classe ~ ., data = train, method = "rf", trControl = fit_control)
 
+rf_fit
 
-set.seed(825)
-rf_fit <- train(classe ~ ., data = dataset_sel,
-                 method = "rf",
-                 trControl = fitControl
-                 )
-
-test_set_sel <- test_set %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)
-# 
-# predictions <- predict(rf_fit, test_set_sel)
 
 ```
 
-TEST
+It can be seen that the final model has an accuracy of **`r round(rf_fit$results$Accuracy[2], digits = 4)`** using 10-fold cross-validation. This seems to be quite acceptable.
+
+## Accuracy on the test set
+
+Cross-validation suggests that the random forest model performs very well. The next step is to verify this performance on the test set.
+
+```{r}
+test_pred <- predict(rf_fit, newdata = test)
+test_accuracy <- mean(test_pred == test$classe)
+test_accuracy
+
+```
+
+The accuracy on the test set is `r round(test_accuracy, digits = 4)`. This is almost equal to the accuracy from the cross-validation.
+
+
+# Predicting the quiz dataset
+
+Finally I'll show the code for predicting the quiz dataset. However without showing the results to prevent cheating.
+
+```{r quiz-dataset}
+quiz_dataset <- read_csv("data/pml-testing.csv", na = c("NA", "#DIV/0!")) %>% rename(id = X1)
+
+# remove missing values and the id and timestamps
+quiz_dataset <- quiz_dataset %>% select_if(.predicate = ~!any(is.na(.x))) %>% select(-contains("timestamp"), -id)
+
+quiz_prediction <- predict(rf_fit, newdata = quiz_dataset)
+
+quiz_answers <- bind_cols(problem_id = quiz_dataset$problem_id, prediction = quiz_prediction)
+
+```
+
